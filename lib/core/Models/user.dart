@@ -1,3 +1,4 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class UserModel {
@@ -5,12 +6,14 @@ class UserModel {
   final String email;
   final String username;
   final Timestamp joinedDate;
+  final String habitid;
 
   UserModel({
     required this.id,
     required this.email,
     required this.username,
     required this.joinedDate,
+    required this.habitid,
   });
 
   factory UserModel.fromFirestore(DocumentSnapshot doc) {
@@ -20,7 +23,7 @@ class UserModel {
       id: doc.id,
       email: data['email'] ?? '',
       username: data['displayName'] ?? '',
-      joinedDate: data['joinedDate'] ?? Timestamp.now(),
+      joinedDate: data['joinedDate'] ?? Timestamp.now(), habitid: '',
     );
   }
 

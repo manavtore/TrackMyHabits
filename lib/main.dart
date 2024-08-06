@@ -3,6 +3,7 @@ import 'package:habit_tracker/core/app/provider.dart';
 
 import 'package:habit_tracker/features/routes/routes.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:habit_tracker/ui/view/homeScreen.dart';
 import 'package:habit_tracker/ui/view/loginPage.dart';
 import 'package:habit_tracker/ui/view/signUpScreen.dart';
 import 'package:provider/provider.dart';
@@ -35,11 +36,11 @@ class HabitTracker extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      initialRoute: AppRoutes.signupRoute,
+      initialRoute: AppRoutes.homeRoute,
       routes: AppRoutes.routes,
       home: const Scaffold(
         body: Center(
-          child:SignupScreen()
+          child:HomeScreen()
 
         ),
       ),

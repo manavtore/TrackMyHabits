@@ -31,4 +31,5 @@ class FirestoreServices {
       print('Error registering user: $e');
     }
   }
+  
 }
