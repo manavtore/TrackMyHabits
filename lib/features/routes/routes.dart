@@ -24,7 +24,8 @@ class AppRoutes {
     settingsRoute:(context) => const SettingScreen(),
     statsRoute:(context) => const StatsScreen(),
     signupRoute: (context) => const SignupScreen(),
-    habitCalender: (context) => HabitCalender(userId: FirebaseAuth.instance.currentUser!.uid),
+    habitCalender: (context) => HabitCalendar(userId: FirebaseAuth.instance.currentUser!.uid),
+       
 
  };
 }

@@ -6,14 +6,12 @@ class UserModel {
   final String email;
   final String username;
   final Timestamp joinedDate;
-  final String habitid;
 
   UserModel({
     required this.id,
     required this.email,
     required this.username,
     required this.joinedDate,
-    required this.habitid,
   });
 
   factory UserModel.fromFirestore(DocumentSnapshot doc) {
@@ -23,7 +21,7 @@ class UserModel {
       id: doc.id,
       email: data['email'] ?? '',
       username: data['displayName'] ?? '',
-      joinedDate: data['joinedDate'] ?? Timestamp.now(), habitid: '',
+      joinedDate: data['joinedDate'] ?? Timestamp.now(),
     );
   }
 

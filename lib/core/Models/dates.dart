@@ -1,18 +1,15 @@
 import 'package:firebase_auth/firebase_auth.dart';
 
-import 'package:firebase_auth/firebase_auth.dart';
-
 class CurrentDate {
   List<Map<String, bool>> habitsOfTheDay;
   int score;
-  String date; 
+  String date;
   String userid = FirebaseAuth.instance.currentUser!.uid;
-
 
   CurrentDate({
     required this.habitsOfTheDay,
     required this.score,
-    required this.date, 
+    required this.date,
   });
 
   void calculateScore(int totalHabits) {
@@ -31,14 +28,18 @@ class CurrentDate {
   }
 
   factory CurrentDate.fromMap(Map<String, dynamic> data) {
+    List<dynamic> habitsOfTheDayRaw = data['habitsOfTheDay'] as List<dynamic>;
+    List<Map<String, bool>> habitsOfTheDay = habitsOfTheDayRaw.map((item) {
+      return Map<String, bool>.from(item as Map<dynamic, dynamic>);
+    }).toList();
+
     return CurrentDate(
-      habitsOfTheDay: List<Map<String, bool>>.from(data['habitsOfTheDay']),
-      score: data['score'],
-      date: data['date'],
+      habitsOfTheDay: habitsOfTheDay,
+      score: data['score'] as int,
+      date: data['date'] as String,
     );
   }
 }
-
 
 class AllDates {
   List<CurrentDate> dates;

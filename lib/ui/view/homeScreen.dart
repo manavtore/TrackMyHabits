@@ -46,23 +46,7 @@ class _HomeScreenState extends State<HomeScreen> {
       }).toList();
 
       if (habitsForSelectedDate.isEmpty) {
-        Habit newHabit = Habit(
-          title: 'New Habit', 
-          description: 'Description here',
-          startDate: date,
-          endDate: date.add(Duration(days: 1)), 
-          streak: 0,
-          isComplete: false,
-          totalCompletions: 0,
-          reminderTime: TimeOfDay.now(),
-          days: [
-            {date: false}
-          ],
-          selectedWeekdays: [],
-          userid: userId,
-        );
-        await _addOrUpdateHabit(newHabit);
-        habitsForSelectedDate.add(newHabit); // Add to the local list as well
+        Text('No habits found for the selected date');
       }
 
       setState(() {

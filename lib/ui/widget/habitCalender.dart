@@ -1,224 +1,159 @@
-import 'package:easy_date_timeline/easy_date_timeline.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cell_calendar/cell_calendar.dart';
 import 'package:flutter/material.dart';
-import 'package:habit_tracker/core/Models/habit.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:get/utils.dart';
+import 'package:habit_tracker/core/Models/dates.dart';
 
-class HabitCalender extends StatefulWidget {
+class HabitCalendar extends StatefulWidget {
   final String userId;
 
-  const HabitCalender({super.key, required this.userId}); 
+  const HabitCalendar({super.key, required this.userId});
 
   @override
-  State<HabitCalender> createState() => _HabitCalenderState();
+  State<HabitCalendar> createState() => _HabitCalendarState();
 }
 
-class _HabitCalenderState extends State<HabitCalender> {
-  TextEditingController habitNameController = TextEditingController();
-  TextEditingController descriptionController = TextEditingController();
-  TextEditingController frequencyController = TextEditingController();
-  DateTime startDateController = DateTime.now();
-  DateTime endDateController = DateTime.now().add(const Duration(days: 1));
-  TimeOfDay reminderTimeController = TimeOfDay.now();
-  bool isCompleteController = false;
-  List<Map<DateTime, bool>> daysController = [];
-  List<String> selectedWeekdays = [];
+class _HabitCalendarState extends State<HabitCalendar> {
+  late Future<List<CurrentDate>> _futureCurrentDates;
 
-  final List<String> weekdays = [
-    'Monday',
-    'Tuesday',
-    'Wednesday',
-    'Thursday',
-    'Friday',
-    'Saturday',
-    'Sunday',
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _futureCurrentDates = fetchCurrentDates();
+  }
+
+Future<List<CurrentDate>> fetchCurrentDates() async {
+    try {
+      var snapshot =
+          await FirebaseFirestore.instance.collection('Alldates').get();
+      if (snapshot.docs.isEmpty) {
+        print('No documents found in the collection.');
+        return [];
+      } else {
+        print('Documents found: ${snapshot.docs.length}');
+      }
+
+      var doc = snapshot.docs.first.data();
+
+      List<dynamic> datesData = doc['dates'] ?? [];
+      print('Dates data: $datesData');
+
+      List<CurrentDate> currentDates = datesData.map((data) {
+        print('Date data: $data');
+        return CurrentDate.fromMap(data as Map<String, dynamic>);
+      }).toList();
+
+      return currentDates;
+    } catch (e) {
+      print('Error fetching dates: $e');
+      return [];
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("New Habit"),
+        title: const Text("Habit Calendar"),
         centerTitle: false,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.save),
-            onPressed: () {
-              // Save the habit when the save button is pressed
-              saveHabit();
-            },
-          ),
-        ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(8.0),
-        children: [
-          TextField(
-            controller: habitNameController,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-              labelText: 'Habit Name',
-            ),
-          ),
-          const SizedBox(height: 8.0),
-          TextField(
-            controller: descriptionController,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-              labelText: 'Description',
-            ),
-          ),
-          const SizedBox(height: 8.0),
-          TextField(
-            controller: frequencyController,
-            keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-              labelText: 'Frequency (Times per Week)',
-            ),
-          ),
-          const SizedBox(height: 8.0),
-          // Start Date Picker
-          GestureDetector(
-            onTap: () async {
-              DateTime? selectedDate = await showDatePicker(
+      body: FutureBuilder<List<CurrentDate>>(
+        future: _futureCurrentDates,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(child: Text('No Data Available'));
+          }
+
+          List<CurrentDate> currentDates = snapshot.data!;
+
+          return CellCalendar(
+            events: _buildEvents(currentDates),
+            onCellTapped: (date) {
+              final eventsOnTheDate = currentDates.where((dateData) {
+                final eventDate = DateTime.parse(dateData.date);
+                return eventDate.year == date.year &&
+                    eventDate.month == date.month &&
+                    eventDate.day == date.day;
+              }).toList();
+
+              showDialog(
                 context: context,
-                initialDate: startDateController,
-                firstDate: DateTime(2000),
-                lastDate: DateTime(2100),
+                builder: (context) => AlertDialog(
+                  title: Text('${date.toString().split(' ')[0]}'),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.max,
+                    children: eventsOnTheDate.expand((dateData) {
+                      return dateData.habitsOfTheDay.map((habit) {
+                        String habitName = habit.keys.first;
+                        bool isComplete = habit.values.first;
+                        return Text(
+                            '$habitName: ${isComplete ? "Completed" : "Not Completed"}');
+                      }).toList();
+                    }).toList(),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('OK'),
+                    ),
+                  ],
+                ),
               );
-              if (selectedDate != null) {
-                setState(() {
-                  startDateController = selectedDate;
-                });
-              }
             },
-            child: InputDecorator(
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                labelText: 'Start Date',
-              ),
-              child: Text(
-                '${startDateController.toLocal()}'.split(' ')[0],
-                style: const TextStyle(fontSize: 16),
-              ),
-            ),
-          ),
-          const SizedBox(height: 8.0),
-          // End Date Picker
-          GestureDetector(
-            onTap: () async {
-              DateTime? selectedDate = await showDatePicker(
-                context: context,
-                initialDate: endDateController,
-                firstDate: DateTime(2000),
-                lastDate: DateTime(2100),
+            daysOfTheWeekBuilder: (dayIndex) {
+              final labels = ["S", "M", "T", "W", "T", "F", "S"];
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8.0),
+                child: Text(
+                  labels[dayIndex],
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
               );
-              if (selectedDate != null) {
-                setState(() {
-                  endDateController = selectedDate;
-                });
-              }
             },
-            child: InputDecorator(
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                labelText: 'End Date',
-              ),
-              child: Text(
-                '${endDateController.toLocal()}'.split(' ')[0],
-                style: const TextStyle(fontSize: 16),
-              ),
-            ),
-          ),
-          const SizedBox(height: 8.0),
-          // Reminder Time Picker
-          GestureDetector(
-            onTap: () async {
-              TimeOfDay? selectedTime = await showTimePicker(
-                context: context,
-                initialTime: reminderTimeController,
+            monthYearLabelBuilder: (datetime) {
+              final year = datetime!.year.toString();
+              final month = datetime.month.toString();
+              return Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Text(
+                  " $month, $year",
+                  style: const TextStyle(fontSize: 20, 
+                  fontWeight: FontWeight.bold),
+                ),
               );
-              if (selectedTime != null) {
-                setState(() {
-                  reminderTimeController = selectedTime;
-                });
-              }
             },
-            child: InputDecorator(
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                labelText: 'Reminder Time',
-              ),
-              child: Text(
-                reminderTimeController.format(context),
-                style: const TextStyle(fontSize: 16),
-              ),
-            ),
-          ),
-          const SizedBox(height: 8.0),
-          Wrap(
-            spacing: 10.0,
-            runSpacing: 5.0,
-            children: weekdays.map((day) {
-              return FilterChip(
-                label: Text(day),
-                selected: selectedWeekdays.contains(day),
-                onSelected: (isSelected) {
-                  setState(() {
-                    if (isSelected) {
-                      selectedWeekdays.add(day);
-                    } else {
-                      selectedWeekdays.remove(day);
-                    }
-                  });
-                  print("Selected Weekdays: $selectedWeekdays");
-                },
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 8.0),
-        ],
+          );
+        },
       ),
     );
   }
 
-  void saveHabit() {
-    int frequency = int.tryParse(frequencyController.text) ?? 0;
+  List<CalendarEvent> _buildEvents(List<CurrentDate> currentDates) {
+    List<CalendarEvent> events = [];
 
-    Habit newHabit = Habit(
-      title: habitNameController.text,
-      description: descriptionController.text,
-      startDate: startDateController,
-      endDate: endDateController,
-      streak: 0,
-      isComplete: false,
-      totalCompletions: 0,
-      reminderTime: reminderTimeController,
-      days: daysController,
-      selectedWeekdays: selectedWeekdays,
-      userid: FirebaseAuth.instance.currentUser!.uid, 
-    );
+    for (var dateData in currentDates) {
+      DateTime date = DateTime.parse(dateData.date);
+      int habitCount = dateData.habitsOfTheDay.length;
 
-    newHabit.addHabit();
+      events.add(CalendarEvent(
+        eventName: 'Habits: $habitCount',
+        eventDate: date,
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Habit added successfully!')),
-    );
+        eventTextStyle: const TextStyle(
+          fontSize: 10,
+          height: 1.5,
+          fontWeight: FontWeight.bold,
+          color: Colors.white),
+      ));
+    }
 
-    resetForm();
-    Navigator.pushNamed(context, '/home');
-  }
-
-  void resetForm() {
-    setState(() {
-      habitNameController.clear();
-      descriptionController.clear();
-      frequencyController.clear();
-      startDateController = DateTime.now();
-      endDateController = DateTime.now().add(const Duration(days: 1));
-      reminderTimeController = TimeOfDay.now();
-      selectedWeekdays.clear();
-      daysController.clear();
-    });
+    return events;
   }
 }

@@ -18,6 +18,7 @@ class Habit {
   List<Map<DateTime, bool>> days;
   List<String> selectedWeekdays;
   String userid = FirebaseAuth.instance.currentUser!.uid;
+  String id;
 
   Habit({
     required this.title,
@@ -31,10 +32,12 @@ class Habit {
     required this.days,
     required this.selectedWeekdays,
     required this.userid,
+    required this.id,
   });
 
   factory Habit.fromMap(Map<String, dynamic> data) {
     return Habit(
+      id: data['id'] ?? '',
       title: data['title'],
       description: data['description'],
       startDate: data['startDate'].toDate(),
@@ -48,7 +51,7 @@ class Habit {
       ),
       days: List<Map<DateTime, bool>>.from(data['days']),
       selectedWeekdays: List<String>.from(data['selectedWeekdays']),
-      userid: data['userid'], // Use the parsed userid
+      userid: data['userid'], 
     );
   }
 

@@ -19,7 +19,6 @@ class FirestoreServices {
     }
   }
 
-  // Function to add a new user to the Firestore
   Future<void> addUser(String id, String email, String displayName, DateTime date) async {
     try {
       await firestore.collection('User').doc(id).set({
