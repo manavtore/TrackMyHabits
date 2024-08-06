@@ -48,6 +48,9 @@ dependencies:
   cell_calendar: ^0.8.0
   table_calendar: ^3.1.2
   uuid: ^4.4.2
+  flutter_local_notifications: ^17.2.1+2
+  timezone: ^0.9.4
+  firebase_messaging: ^15.0.4
   
 dev_dependencies:
   flutter_test:

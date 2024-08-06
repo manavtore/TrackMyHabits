@@ -15,6 +15,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final EasyInfiniteDateTimelineController _controller =
       EasyInfiniteDateTimelineController();
+      
   int _selectedIndex = 0;
 
   List<Habit> _habitsForSelectedDate = [];
@@ -26,10 +27,14 @@ class _HomeScreenState extends State<HomeScreen> {
     _fetchHabitsForDate(DateTime.now());
     _fetchCurrentDateData(DateTime.now());
   }
-
-  Future<void> _fetchHabitsForDate(DateTime date) async {
+Future<void> _fetchHabitsForDate(DateTime date) async {
     try {
-      final userId = FirebaseAuth.instance.currentUser!.uid;
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        print("Error: No user is currently logged in.");
+        return;
+      }
+      final userId = user.uid;
       final querySnapshot = await FirebaseFirestore.instance
           .collection('Habits')
           .where('userid', isEqualTo: userId)
@@ -45,10 +50,6 @@ class _HomeScreenState extends State<HomeScreen> {
             !habit.isComplete;
       }).toList();
 
-      if (habitsForSelectedDate.isEmpty) {
-        Text('No habits found for the selected date');
-      }
-
       setState(() {
         _habitsForSelectedDate = habitsForSelectedDate;
       });
@@ -61,7 +62,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _fetchCurrentDateData(DateTime date) async {
     try {
-      final userId = FirebaseAuth.instance.currentUser!.uid;
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        print("Error: No user is currently logged in.");
+        return;
+      }
+      final userId = user.uid;
       final dateKey = date.toIso8601String().split('T')[0];
 
       final docSnapshot = await FirebaseFirestore.instance
@@ -70,11 +76,19 @@ class _HomeScreenState extends State<HomeScreen> {
           .get();
 
       if (docSnapshot.exists) {
-        final currentDate = CurrentDate.fromMap(docSnapshot.data()!);
+        final currentDateData = docSnapshot.data();
+        if (currentDateData != null) {
+          final currentDate = CurrentDate.fromMap(currentDateData);
 
-        setState(() {
-          _totalScore = currentDate.score;
-        });
+          setState(() {
+            _totalScore = currentDate.score;
+          });
+        } else {
+          print("Error: Document data is null.");
+          setState(() {
+            _totalScore = 0;
+          });
+        }
       } else {
         setState(() {
           _totalScore = 0;
@@ -84,6 +98,7 @@ class _HomeScreenState extends State<HomeScreen> {
       print("Error fetching current date data: $e");
     }
   }
+
 
   Future<void> _addOrUpdateHabit(Habit habit) async {
     try {

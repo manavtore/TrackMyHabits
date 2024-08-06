@@ -1,8 +1,6 @@
 import 'package:cell_calendar/cell_calendar.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:get/utils.dart';
 import 'package:habit_tracker/core/Models/dates.dart';
 
 class HabitCalendar extends StatefulWidget {

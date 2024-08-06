@@ -1,5 +1,7 @@
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:habit_tracker/core/app/provider.dart';
+import 'package:habit_tracker/features/notification/notification.service.dart';
 
 import 'package:habit_tracker/features/routes/routes.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -7,10 +9,15 @@ import 'package:habit_tracker/ui/view/homeScreen.dart';
 import 'package:habit_tracker/ui/view/loginPage.dart';
 import 'package:habit_tracker/ui/view/signUpScreen.dart';
 import 'package:provider/provider.dart';
+import 'package:timezone/data/latest.dart' as tz;
+
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  await NotificationService.init();
+  tz.initializeTimeZones();
+  String? token = await FirebaseMessaging.instance.getToken();
   runApp(const Core());
 }
 

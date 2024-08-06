@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:habit_tracker/core/Models/habit.dart';
 import 'package:habit_tracker/core/services/firestore.services.dart';
 import 'package:habit_tracker/core/utils/weekdays.dart';
-import 'package:uuid/uuid.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:habit_tracker/features/notification/notification.service.dart';
 
 class NewHabit extends StatefulWidget {
   const NewHabit({super.key});
@@ -23,7 +24,6 @@ class _NewHabitState extends State<NewHabit> {
   bool isCompleteController = false;
   List<Map<DateTime, bool>> daysController = [];
   List<String> selectedWeekdays = []; 
-  var uuid = Uuid();
 
   
 
@@ -97,7 +97,7 @@ class _NewHabitState extends State<NewHabit> {
             ),
           ),
           const SizedBox(height: 8.0),
-          // End Date Picker
+          
           GestureDetector(
             onTap: () async {
               DateTime? selectedDate = await showDatePicker(
@@ -135,6 +135,7 @@ class _NewHabitState extends State<NewHabit> {
                   reminderTimeController = selectedTime;
                 });
               }
+              
             },
             child: InputDecorator(
               decoration: const InputDecoration(
@@ -176,9 +177,10 @@ class _NewHabitState extends State<NewHabit> {
   }
 
   void saveHabit() {
+    int frequency = int.tryParse(frequencyController.text) ?? 0;
 
     Habit newHabit = Habit(
-      id: uuid.v1(),
+      id: '',
       title: habitNameController.text,
       description: descriptionController.text,
       startDate: startDateController,
@@ -191,13 +193,26 @@ class _NewHabitState extends State<NewHabit> {
       selectedWeekdays: selectedWeekdays,
       userid: FirebaseAuth.instance.currentUser!.uid,
     );
-
+    
     newHabit.addHabit();
+
+    DateTime now = DateTime.now();
+
+    DateTime scheduledDateTime = DateTime(now.year, now.month, now.day,
+        reminderTimeController.hour, reminderTimeController.minute);
+
+    NotificationService.showScheduledNotification(
+      newHabit.title,
+      newHabit.description,
+      scheduledDateTime,
+    );
+     
+   
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Habit added successfully!')),
     );
-    print(id);
+
     resetForm();
     Navigator.pushNamed(context, '/home');
   }
@@ -215,5 +230,3 @@ class _NewHabitState extends State<NewHabit> {
     });
   }
 }
-
-
