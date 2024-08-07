@@ -84,7 +84,8 @@ For handling notifications, refer to the official documentation:
 <img src="./photos/HabitDetails.png" width=20%>
 <img src="./photos/homescreen.png" width=20%>
 <img src="./photos/newHabbitScreen.png" width=20%>
-<img src="./phtotos/signupScreen.png" width=20%>
+<img src="./photos/signupScreen.png" width=20%>
 <img src="./photos/email.png" width=20%>
 <img src="./photos/habitCalender.png" width=20%>
+</div>
 
