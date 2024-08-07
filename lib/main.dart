@@ -43,11 +43,11 @@ class HabitTracker extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      initialRoute: AppRoutes.homeRoute,
+      initialRoute: AppRoutes.signupRoute,
       routes: AppRoutes.routes,
       home: const Scaffold(
         body: Center(
-          child:HomeScreen()
+          child:SignupScreen()
 
         ),
       ),
