@@ -1,7 +1,5 @@
 # habit_tracker
 
-A new Flutter project.
-
 ## Getting Started
 
 # Flutter Firebase Project
@@ -81,7 +79,12 @@ For handling notifications, refer to the official documentation:
 - **Firebase Docs**: [Firebase Authentication](https://firebase.google.com/docs/auth)
 - **Flutter Local Notifications**: [Flutter Local Notifications Package](https://pub.dev/packages/flutter_local_notifications)
 
+#screenShots
+<div style="display: flex; flex-direction: 'row';">
+<img src="./HabitDetails.png" width=20%>
+<img src="./homescreen.png" width=20%>
+<img src="./newHabbitScreen.png" width=20%>
+<img src="./signupScreen.png" width=20%>
+<img src="./email.png" width=20%>
+<img src="./habitCalender.png" width=20%>
 
-
-
-# TrackMyHabits
