@@ -52,6 +52,35 @@ class _StatsScreenState extends State<StatsScreen> {
     }
   }
 
+  Future<void> deleteCollection(String collectionPath) async {
+    final collectionRef = _firestore.collection(collectionPath);
+    final querySnapshot = await collectionRef.get();
+
+    for (var doc in querySnapshot.docs) {
+      await doc.reference.delete();
+    }
+
+    print('Collection $collectionPath deleted successfully');
+  }
+
+  Future<void> deleteAllCollections() async {
+    final userid = FirebaseAuth.instance.currentUser?.uid;
+    if (userid == null) {
+      print('User not logged in');
+      return;
+    }
+
+    try {
+      await deleteCollection('CurrentDates');
+      await deleteCollection('Alldates');
+      await deleteCollection('Habits');
+
+      print('All collections deleted successfully');
+    } catch (e) {
+      print('Failed to delete collections: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -60,9 +89,18 @@ class _StatsScreenState extends State<StatsScreen> {
         centerTitle: true,
       ),
       body: Center(
-        child: ElevatedButton(
-          onPressed: fetchAndInsertData,
-          child: const Text('Fetch and Insert Data'),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton(
+              onPressed: fetchAndInsertData,
+              child: const Text('Fetch and Insert Data'),
+            ),
+            ElevatedButton(
+              onPressed: deleteAllCollections,
+              child: const Text('Delete All Collections'),
+            ),
+          ],
         ),
       ),
     );
