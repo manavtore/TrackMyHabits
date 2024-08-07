@@ -7,7 +7,7 @@ import 'package:habit_tracker/core/services/firestore.services.dart';
 import 'package:habit_tracker/core/utils/weekdays.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:habit_tracker/features/notification/notification.service.dart';
-
+import 'package:habit_tracker/ui/view/homeScreen.dart';
 class NewHabit extends StatefulWidget {
   const NewHabit({super.key});
 
@@ -178,10 +178,10 @@ class _NewHabitState extends State<NewHabit> {
   }
 
 void saveHabit() async {
-    // Parse the frequency input
+
     int frequency = int.tryParse(frequencyController.text) ?? 0;
 
-    // Create a new habit instance
+  
     Habit newHabit = Habit(
       id: '',
       title: habitNameController.text,
@@ -197,18 +197,14 @@ void saveHabit() async {
       userid: FirebaseAuth.instance.currentUser!.uid,
     );
 
-    // Add habit to Firestore and get document reference
     DocumentReference docRef = await FirebaseFirestore.instance
         .collection('Habits')
         .add(newHabit.toMap());
 
-    // Update the habit's ID with the document ID
     newHabit.id = docRef.id;
 
-    // Optionally, update the document in Firestore with the new ID
     await docRef.update({'id': newHabit.id});
 
-    // Schedule a notification for the habit reminder
     DateTime now = DateTime.now();
     DateTime scheduledDateTime = DateTime(
       now.year,
@@ -224,12 +220,11 @@ void saveHabit() async {
       scheduledDateTime,
     );
 
-    // Show a success message
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Habit added successfully!')),
     );
 
-    // Reset the form
+  
     resetForm();
     Navigator.pushNamed(context, '/home');
   }

@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:habit_tracker/core/Models/dates.dart';
 import 'package:habit_tracker/core/Models/habit.dart';
+import 'package:habit_tracker/core/Models/subHabit.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -15,7 +16,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final EasyInfiniteDateTimelineController _controller =
       EasyInfiniteDateTimelineController();
-      
+   
   int _selectedIndex = 0;
 
   List<Habit> _habitsForSelectedDate = [];
@@ -27,7 +28,8 @@ class _HomeScreenState extends State<HomeScreen> {
     _fetchHabitsForDate(DateTime.now());
     _fetchCurrentDateData(DateTime.now());
   }
-Future<void> _fetchHabitsForDate(DateTime date) async {
+
+  Future<void> _fetchHabitsForDate(DateTime date) async {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
@@ -59,7 +61,83 @@ Future<void> _fetchHabitsForDate(DateTime date) async {
       print("Error fetching habits: $e");
     }
   }
-   
+
+ Future<void> fetchHabitsForMonth(DateTime month) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        print("Error: No user is currently logged in.");
+        return;
+      }
+      final userId = user.uid;
+
+      DateTime startOfMonth = DateTime(month.year, month.month, 1);
+      DateTime endOfMonth = DateTime(month.year, month.month + 1, 0);
+
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('Habits')
+          .where('userid', isEqualTo: userId)
+          .get();
+
+      List<Habit> habits = querySnapshot.docs.map((doc) {
+        return Habit.fromMap(doc.data());
+      }).toList();
+
+      for (DateTime date = startOfMonth;
+          date.isBefore(endOfMonth.add(Duration(days: 1)));
+          date = date.add(Duration(days: 1))) {
+        List<Habit> habitsForSelectedDate = habits.where((habit) {
+          return date.isAfter(habit.startDate) &&
+              date.isBefore(habit.endDate) &&
+              !habit.isComplete;
+        }).toList();
+
+        await _calculateAndStoreScore(date, habitsForSelectedDate);
+
+        // Debugging: print the date and score
+        print("Date: $date, Score: ${habitsForSelectedDate.length}");
+      }
+    } catch (e) {
+      print("Error fetching habits for month: $e");
+    }
+  }
+
+
+  Future<void> _calculateAndStoreScore(
+      DateTime date, List<Habit> habits) async {
+    int completedCount = habits.where((habit) => habit.isComplete).length;
+    int score =
+        habits.isEmpty ? 0 : ((completedCount / habits.length) * 10).toInt();
+
+    List<SubHabit> subHabitsOfTheDay = habits.map((habit) {
+      return SubHabit(
+        title: habit.title,
+        habitid: habit.id,
+        isComplete: habit.isComplete,
+      );
+    }).toList();
+
+    CurrentDate currentDate = CurrentDate(
+      userid: FirebaseAuth.instance.currentUser!.uid,
+      score: score,
+      date: date.toIso8601String().split('T')[0],
+      habitsOfTheDay: subHabitsOfTheDay,
+    );
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('CurrentDates')
+          .doc('${currentDate.date}${currentDate.userid}')
+          .set(currentDate.toMap(), SetOptions(merge: true));
+    } catch (e) {
+      print("Error storing score: $e");
+    }
+  }
+
+  void _onMonthSelected(DateTime selectedMonth) {
+    fetchHabitsForMonth(selectedMonth);
+  }
+
   Future<void> _fetchCurrentDateData(DateTime date) async {
     try {
       final user = FirebaseAuth.instance.currentUser;
@@ -79,9 +157,8 @@ Future<void> _fetchHabitsForDate(DateTime date) async {
         final currentDateData = docSnapshot.data();
         if (currentDateData != null) {
           final currentDate = CurrentDate.fromMap(currentDateData);
-
           setState(() {
-            _totalScore = currentDate.score;
+            _totalScore = currentDate.score ?? 0;
           });
         } else {
           print("Error: Document data is null.");
@@ -98,46 +175,15 @@ Future<void> _fetchHabitsForDate(DateTime date) async {
       print("Error fetching current date data: $e");
     }
   }
- 
 
   Future<void> _addOrUpdateHabit(Habit habit) async {
     try {
       await FirebaseFirestore.instance
           .collection('Habits')
-          .doc(habit.userid) 
-          .set(
-              habit.toMap(),
-              SetOptions(
-                  merge:
-                      true)); 
+          .doc(habit.id)
+          .set(habit.toMap(), SetOptions(merge: true));
     } catch (e) {
       print("Error adding/updating habit: $e");
-    }
-  }
-
-  void _calculateAndStoreScore(DateTime date, List<Habit> habits) async {
-    int completedCount = habits.where((habit) => habit.isComplete).length;
-    int score = ((completedCount / habits.length) * 10).toInt();
-
-    List<Map<String, bool>> habitsOfTheDay = habits.map((habit) {
-      return {habit.title: habit.isComplete};
-    }).toList();
-
-  
-    CurrentDate currentDate = CurrentDate(
-      habitsOfTheDay: habitsOfTheDay,
-      score: score,
-      date: date.toIso8601String().split('T')[0], 
-    );
-
-    try {
-      await FirebaseFirestore.instance
-          .collection('CurrentDates')
-          .doc(
-              currentDate.date + '_' + currentDate.userid) 
-          .set(currentDate.toMap(), SetOptions(merge: true));
-    } catch (e) {
-      print("Error storing score: $e");
     }
   }
 
@@ -179,48 +225,34 @@ Future<void> _fetchHabitsForDate(DateTime date) async {
         habit.streak += habit.isComplete ? 1 : -1;
       });
 
-      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-          .collection('Habits')
-          .where('id', isEqualTo: habit.id)
-          .get();
-
-      if (querySnapshot.docs.isNotEmpty) {
-        await FirebaseFirestore.instance
-            .collection('Habits')
-            .doc(querySnapshot.docs.first.id)
-            .update({
-          'streak': habit.streak,
-        });
-      } else {
-        await _addOrUpdateHabit(habit);
-      }
+      await _addOrUpdateHabit(habit);
 
       final docSnapshot = await FirebaseFirestore.instance
           .collection('CurrentDates')
-          .where('date', isEqualTo: dateKey)
-          .where('userid', isEqualTo: userId)
+          .doc('$dateKey$userId')
           .get();
 
-      if (docSnapshot.docs.isNotEmpty) {
-        final id = docSnapshot.docs.first.id;
-
-        final currentDateData = docSnapshot.docs.first.data();
-
-        
+      if (docSnapshot.exists) {
+        final currentDateData = docSnapshot.data();
+        if (currentDateData != null) {
           final currentDate = CurrentDate.fromMap(currentDateData);
-          List<Map<String, bool>> updatedHabitsOfTheDay =
-              currentDate.habitsOfTheDay;
 
-          for (int i = 0; i < updatedHabitsOfTheDay.length; i++) {
-            if (updatedHabitsOfTheDay[i].containsKey(habit.id)) {
-              updatedHabitsOfTheDay[i][habit.id] = habit.isComplete;
-              break;
-            }
+          List<SubHabit> updatedHabitsOfTheDay = currentDate.habitsOfTheDay;
+
+          final index = updatedHabitsOfTheDay.indexWhere(
+            (subHabit) => subHabit.habitid == habit.id,
+          );
+
+          if (index != -1) {
+            updatedHabitsOfTheDay[index] = SubHabit(
+              title: habit.title,
+              habitid: habit.id,
+              isComplete: habit.isComplete,
+            );
           }
 
-          int totalHabits = _habitsForSelectedDate.length;
           currentDate.habitsOfTheDay = updatedHabitsOfTheDay;
-          currentDate.calculateScore(totalHabits);
+          currentDate.calculateScore();
 
           await FirebaseFirestore.instance
               .collection('CurrentDates')
@@ -230,12 +262,13 @@ Future<void> _fetchHabitsForDate(DateTime date) async {
           setState(() {
             _totalScore = currentDate.score;
           });
-        
+        }
       }
     } catch (e) {
       print("Error updating habit completion: $e");
     }
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -315,17 +348,21 @@ Future<void> _fetchHabitsForDate(DateTime date) async {
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
-        onTap: _onItemTapped,
         currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
         items: const [
           BottomNavigationBarItem(
-              icon: Icon(Icons.stacked_bar_chart), label: 'Stats'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.add_outlined),
-            label: 'Add Habit',
+            icon: Icon(Icons.score),
+            label: 'Stats',
           ),
           BottomNavigationBarItem(
-              icon: Icon(Icons.settings), label: 'Settings'),
+            icon: Icon(Icons.add),
+            label: 'New Habit',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings),
+            label: 'Settings',
+          ),
         ],
       ),
     );

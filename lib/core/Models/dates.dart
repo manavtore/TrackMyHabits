@@ -1,42 +1,55 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:firebase_auth/firebase_auth.dart';
 
+import 'package:habit_tracker/core/Models/subHabit.dart';
+
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:habit_tracker/core/Models/subHabit.dart';
+
 class CurrentDate {
-  List<Map<String, bool>> habitsOfTheDay;
+  List<SubHabit> habitsOfTheDay;
   int score;
   String date;
-  String userid = FirebaseAuth.instance.currentUser!.uid;
+  String userid;
 
   CurrentDate({
     required this.habitsOfTheDay,
-    required this.score,
+    this.score = 0,
     required this.date,
-  });
+    String? userid,
+  }) : userid = userid ?? FirebaseAuth.instance.currentUser!.uid;
 
-  void calculateScore(int totalHabits) {
-    int completedCount =
-        habitsOfTheDay.where((habit) => habit.values.first).length;
-    score = ((completedCount / totalHabits) * 10).toInt();
+  void calculateScore() {
+    score = 0;
+
+    for (var habit in habitsOfTheDay) {
+      if (habit.isComplete) {
+        score += 1;
+      }
+    }
   }
 
   Map<String, dynamic> toMap() {
-    return {
-      'habitsOfTheDay': habitsOfTheDay,
+    return <String, dynamic>{
+      'habitsOfTheDay': habitsOfTheDay.map((habit) => habit.toMap()).toList(),
       'score': score,
       'date': date,
       'userid': userid,
     };
   }
 
-  factory CurrentDate.fromMap(Map<String, dynamic> data) {
-    List<dynamic> habitsOfTheDayRaw = data['habitsOfTheDay'] as List<dynamic>;
-    List<Map<String, bool>> habitsOfTheDay = habitsOfTheDayRaw.map((item) {
-      return Map<String, bool>.from(item as Map<dynamic, dynamic>);
-    }).toList();
+  int getScore() {
+    return score;
+  }
 
+  factory CurrentDate.fromMap(Map<String, dynamic> map) {
     return CurrentDate(
-      habitsOfTheDay: habitsOfTheDay,
-      score: data['score'] as int,
-      date: data['date'] as String,
+      habitsOfTheDay: (map['habitsOfTheDay'] as List<dynamic>)
+          .map((item) => SubHabit.fromMap(item as Map<String, dynamic>))
+          .toList(),
+      score: map['score'] as int,
+      date: map['date'] as String,
+      userid: map['userid'] as String,
     );
   }
 }
@@ -44,12 +57,13 @@ class CurrentDate {
 class AllDates {
   List<CurrentDate> dates;
   List<double> allScores;
-  String userid = FirebaseAuth.instance.currentUser!.uid;
+  String userid;
 
   AllDates({
     required this.dates,
     required this.allScores,
-  });
+    String? userid,
+  }) : userid = userid ?? FirebaseAuth.instance.currentUser!.uid;
 
   double get total => allScores.fold(0, (prev, element) => prev + element);
 }
