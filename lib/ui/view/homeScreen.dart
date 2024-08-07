@@ -206,7 +206,7 @@ Future<void> _fetchHabitsForDate(DateTime date) async {
 
         final currentDateData = docSnapshot.docs.first.data();
 
-        if (currentDateData != null) {
+        
           final currentDate = CurrentDate.fromMap(currentDateData);
           List<Map<String, bool>> updatedHabitsOfTheDay =
               currentDate.habitsOfTheDay;
@@ -230,7 +230,7 @@ Future<void> _fetchHabitsForDate(DateTime date) async {
           setState(() {
             _totalScore = currentDate.score;
           });
-        }
+        
       }
     } catch (e) {
       print("Error updating habit completion: $e");
@@ -304,6 +304,10 @@ Future<void> _fetchHabitsForDate(DateTime date) async {
                       Text("Score: $_totalScore"),
                     ],
                   ),
+                  onTap: () {
+                    Navigator.pushNamed(context, '/habitDetails',
+                        arguments: habit);
+                  },
                 );
               },
             ),

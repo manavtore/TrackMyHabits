@@ -4,8 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 FirebaseFirestore firestore = FirebaseFirestore.instance;
-var id = FirebaseAuth.instance.currentUser!.uid;
-
+var userid = FirebaseAuth.instance.currentUser!.uid;
 class Habit {
   String title;
   String description;

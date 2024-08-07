@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:easy_date_timeline/easy_date_timeline.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -176,9 +177,11 @@ class _NewHabitState extends State<NewHabit> {
     );
   }
 
-  void saveHabit() {
+void saveHabit() async {
+    // Parse the frequency input
     int frequency = int.tryParse(frequencyController.text) ?? 0;
 
+    // Create a new habit instance
     Habit newHabit = Habit(
       id: '',
       title: habitNameController.text,
@@ -193,26 +196,40 @@ class _NewHabitState extends State<NewHabit> {
       selectedWeekdays: selectedWeekdays,
       userid: FirebaseAuth.instance.currentUser!.uid,
     );
-    
-    newHabit.addHabit();
 
+    // Add habit to Firestore and get document reference
+    DocumentReference docRef = await FirebaseFirestore.instance
+        .collection('Habits')
+        .add(newHabit.toMap());
+
+    // Update the habit's ID with the document ID
+    newHabit.id = docRef.id;
+
+    // Optionally, update the document in Firestore with the new ID
+    await docRef.update({'id': newHabit.id});
+
+    // Schedule a notification for the habit reminder
     DateTime now = DateTime.now();
-
-    DateTime scheduledDateTime = DateTime(now.year, now.month, now.day,
-        reminderTimeController.hour, reminderTimeController.minute);
+    DateTime scheduledDateTime = DateTime(
+      now.year,
+      now.month,
+      now.day,
+      reminderTimeController.hour,
+      reminderTimeController.minute,
+    );
 
     NotificationService.showScheduledNotification(
       newHabit.title,
       newHabit.description,
       scheduledDateTime,
     );
-     
-   
 
+    // Show a success message
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Habit added successfully!')),
     );
 
+    // Reset the form
     resetForm();
     Navigator.pushNamed(context, '/home');
   }
@@ -228,5 +245,20 @@ class _NewHabitState extends State<NewHabit> {
       selectedWeekdays.clear();
       daysController.clear();
     });
+  
+
+
+  void resetForm() {
+    setState(() {
+      habitNameController.clear();
+      descriptionController.clear();
+      frequencyController.clear();
+      startDateController = DateTime.now();
+      endDateController = DateTime.now().add(const Duration(days: 1));
+      reminderTimeController = TimeOfDay.now();
+      selectedWeekdays.clear();
+      daysController.clear();
+    });
   }
+}
 }

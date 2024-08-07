@@ -3,16 +3,25 @@ import 'package:flutter/material.dart';
 import 'package:habit_tracker/core/Models/habit.dart';
 import 'package:intl/intl.dart';
 
-class HabitDetails extends StatelessWidget {
+class HabitDetails extends StatefulWidget {
   final Habit habit;
 
   const HabitDetails({super.key, required this.habit});
 
   @override
+  State<HabitDetails> createState() => _HabitDetailsState();
+}
+
+class _HabitDetailsState extends State<HabitDetails> {
+  var id = FirebaseFirestore.
+  instance.collection('Habits').
+  where('id', isEqualTo: 'id').
+  get();
+  @override
   Widget build(BuildContext context) {
     final DateFormat dateFormat = DateFormat('MMMM dd, yyyy');
-    final String formattedStartDate = dateFormat.format(habit.startDate);
-    final String formattedEndDate = dateFormat.format(habit.endDate);
+    final String formattedStartDate = dateFormat.format(widget.habit.startDate);
+    final String formattedEndDate = dateFormat.format(widget.habit.endDate);
 
     String formatTimeOfDay(TimeOfDay tod) {
       final now = DateTime.now();
@@ -21,7 +30,7 @@ class HabitDetails extends StatelessWidget {
       return format.format(dt);
     }
 
-    final String formattedReminderTime = formatTimeOfDay(habit.reminderTime);
+    final String formattedReminderTime = formatTimeOfDay(widget.habit.reminderTime);
 
     return Scaffold(
       appBar: AppBar(
@@ -38,7 +47,7 @@ class HabitDetails extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.delete),
             onPressed: () {
-              _showDeleteConfirmation(context, habit);
+              _showDeleteConfirmation(context, widget.habit);
             },
           ),
         ],
@@ -47,18 +56,18 @@ class HabitDetails extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: ListView(
           children: [
-            _buildDetailItem('Title', habit.title),
-            _buildDetailItem('Description', habit.description),
+            _buildDetailItem('Title', widget.habit.title),
+            _buildDetailItem('Description', widget.habit.description),
             _buildDetailItem('Start Date', formattedStartDate),
             _buildDetailItem('End Date', formattedEndDate),
             _buildDetailItem('Reminder Time', formattedReminderTime),
-            _buildWeekdayChips(habit.selectedWeekdays),
+            _buildWeekdayChips(widget.habit.selectedWeekdays),
             const SizedBox(height: 20),
-            _buildStatistics(habit),
+            _buildStatistics(widget.habit),
             const SizedBox(height: 20),
-            _buildCompletionProgress(habit),
+            _buildCompletionProgress(widget.habit),
             const SizedBox(height: 20),
-            _buildActionButtons(context, habit),
+            _buildActionButtons(context, widget.habit),
           ],
         ),
       ),
@@ -199,12 +208,13 @@ class HabitDetails extends StatelessWidget {
   Widget _buildActionButtons(BuildContext context, Habit habit) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      
       children: [
         ElevatedButton.icon(
           icon: const Icon(Icons.edit),
           label: const Text('Edit'),
           onPressed: () {
-            Navigator.pushNamed(context, '/editHabit', arguments: habit);
+            Navigator.pushNamed(context, '/editHabit', arguments: habit.id);
           },
         ),
         ElevatedButton.icon(

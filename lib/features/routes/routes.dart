@@ -33,7 +33,6 @@ class AppRoutes {
         HabitCalendar(userId: FirebaseAuth.instance.currentUser!.uid),
     habitDetails: (context) => HabitDetails(
         habit: ModalRoute.of(context)!.settings.arguments as Habit),
-
         editHabitRoute: (context) => editHabit(
         habitId: ModalRoute.of(context)!.settings.arguments as String
         ),
