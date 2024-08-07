@@ -81,10 +81,10 @@ For handling notifications, refer to the official documentation:
 
 #screenShots
 <div style="display: flex; flex-direction: 'row';">
-<img src="./HabitDetails.png" width=20%>
-<img src="./homescreen.png" width=20%>
-<img src="./newHabbitScreen.png" width=20%>
-<img src="./signupScreen.png" width=20%>
-<img src="./email.png" width=20%>
-<img src="./habitCalender.png" width=20%>
+<img src="./photos/HabitDetails.png" width=20%>
+<img src="./photos/homescreen.png" width=20%>
+<img src="./photos/newHabbitScreen.png" width=20%>
+<img src="./phtotos/signupScreen.png" width=20%>
+<img src="./photos/email.png" width=20%>
+<img src="./photos/habitCalender.png" width=20%>
 
