@@ -14,19 +14,11 @@ class SignupScreen extends StatefulWidget {
 }
 
 class _SignupScreenState extends State<SignupScreen> {
-  TextEditingController emailController = TextEditingController();
-  TextEditingController passwordController = TextEditingController();
-  TextEditingController confirmPasswordController = TextEditingController();
-  TextEditingController usernameController = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    emailController = TextEditingController();
-    passwordController = TextEditingController();
-    confirmPasswordController = TextEditingController();
-    usernameController = TextEditingController();
-  }
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController confirmPasswordController =
+      TextEditingController();
+  final TextEditingController usernameController = TextEditingController();
 
   @override
   void dispose() {
@@ -39,9 +31,9 @@ class _SignupScreenState extends State<SignupScreen> {
 
   @override
   Widget build(BuildContext context) {
-    AuthenticationNotifier authenticationNotifier =
+    final AuthenticationNotifier authenticationNotifier =
         Provider.of<AuthenticationNotifier>(context, listen: false);
-    FirestoreServices firestoreServices = FirestoreServices();
+
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
@@ -100,11 +92,11 @@ class _SignupScreenState extends State<SignupScreen> {
                   ),
                   ElevatedButton(
                     onPressed: () async {
-                      String email = emailController.text.trim();
-                      String password = passwordController.text.trim();
-                      String confirmPassword =
+                      final String email = emailController.text.trim();
+                      final String password = passwordController.text.trim();
+                      final String confirmPassword =
                           confirmPasswordController.text.trim();
-                      String username = usernameController.text.trim();
+                      final String username = usernameController.text.trim();
 
                       if (email.isNotEmpty &&
                           password.isNotEmpty &&
@@ -114,19 +106,23 @@ class _SignupScreenState extends State<SignupScreen> {
                           try {
                             await authenticationNotifier.signUp(
                                 email, password);
-                            await FirestoreServices().addUser(
-                                authenticationNotifier.user!.uid,
-                                email,
-                                username,
-                                DateTime.now());
-                            if(authenticationNotifier.user != null){
-                            ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Sign up successful')));
-                                 Navigator.pushNamed(context, '/home');
-                                
-                            }
 
-                          Navigator.pushNamed(context, '/home');
+                            if (authenticationNotifier.user != null) {
+                              await FirestoreServices().addUser(
+                                  authenticationNotifier.user!.uid,
+                                  email,
+                                  username,
+                                  DateTime.now());
+
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content: Text('Sign up successful')));
+                              Navigator.pushNamed(context, '/home');
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content: Text('Sign up failed')));
+                            }
                           } catch (e) {
                             ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(content: Text(e.toString())));
