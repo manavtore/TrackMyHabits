@@ -10,6 +10,7 @@ import 'package:habit_tracker/ui/view/settingScreen.dart';
 import 'package:habit_tracker/ui/view/signUpScreen.dart';
 import 'package:habit_tracker/ui/view/statsScreen.dart';
 import 'package:habit_tracker/ui/widget/habitCalender.dart';
+import 'package:habit_tracker/features/web3/loginPage.dart';
 
 class AppRoutes {
   static const String loginRoute = '/login';
@@ -21,6 +22,7 @@ class AppRoutes {
   static const String habitCalender = '/habitCalender';
   static const String habitDetails = '/habitDetails';
   static const String editHabitRoute = '/editHabit';
+  static const String loginMeta = '/loginPage';
 
   static final routes = {
     loginRoute: (context) => const loginScreen(),
@@ -36,6 +38,8 @@ class AppRoutes {
         editHabitRoute: (context) => editHabit(
         habitId: ModalRoute.of(context)!.settings.arguments as String
         ),
+    loginMeta: (context) => const Loginpage(),
   };
+    
 
 }

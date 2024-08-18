@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:habit_tracker/features/auth/authcontroller.dart';
+import 'package:habit_tracker/features/web3/metamaskAuth.dart';
 import 'package:habit_tracker/ui/view/loginPage.dart';
 
 class SettingScreen extends StatefulWidget {
@@ -45,10 +46,12 @@ class _SettingScreenState extends State<SettingScreen> {
                 ElevatedButton(
                   onPressed: () async {
                    AuthenticationNotifier().signOut();
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const loginScreen()));
+                   Notifier().logout();
+                   Navigator.pushNamedAndRemoveUntil(
+                      context,
+                      '/login',
+                      (Route<dynamic> route) => false,
+                    );
                   },
                   child: const Text('Log Out'),
                 ),

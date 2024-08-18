@@ -1,13 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:easy_date_timeline/easy_date_timeline.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:habit_tracker/core/Models/dates.dart';
 import 'package:habit_tracker/core/Models/habit.dart';
-import 'package:habit_tracker/core/services/firestore.services.dart';
+import 'package:habit_tracker/core/Models/subHabit.dart';
 import 'package:habit_tracker/core/utils/weekdays.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:habit_tracker/features/notification/notification.service.dart';
-import 'package:habit_tracker/ui/view/homeScreen.dart';
 class NewHabit extends StatefulWidget {
   const NewHabit({super.key});
 
@@ -39,7 +37,8 @@ class _NewHabitState extends State<NewHabit> {
             icon: const Icon(Icons.save),
             onPressed: () {
               saveHabit();
-            },
+              saveHabitintoDates(startDateController,endDateController);
+            }
           ),
         ],
       ),
@@ -62,16 +61,6 @@ class _NewHabitState extends State<NewHabit> {
             ),
           ),
           const SizedBox(height: 8.0),
-          TextField(
-            controller: frequencyController,
-            keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-              labelText: 'Frequency (Times per Day)',
-            ),
-          ),
-          const SizedBox(height: 8.0),
-  
           GestureDetector(
             onTap: () async {
               DateTime? selectedDate = await showDatePicker(
@@ -98,7 +87,6 @@ class _NewHabitState extends State<NewHabit> {
             ),
           ),
           const SizedBox(height: 8.0),
-          
           GestureDetector(
             onTap: () async {
               DateTime? selectedDate = await showDatePicker(
@@ -150,7 +138,6 @@ class _NewHabitState extends State<NewHabit> {
             ),
           ),
           const SizedBox(height: 8.0),
-          
           Wrap(
             spacing: 10.0,
             runSpacing: 5.0,
@@ -178,9 +165,6 @@ class _NewHabitState extends State<NewHabit> {
   }
 
 void saveHabit() async {
-
-    int frequency = int.tryParse(frequencyController.text) ?? 0;
-
   
     Habit newHabit = Habit(
       id: '',
@@ -256,4 +240,60 @@ void saveHabit() async {
     });
   }
 }
+
+void saveHabitintoDates(DateTime startDate, DateTime endDate) async {
+    String userId = FirebaseAuth.instance.currentUser!.uid;
+
+    Habit habit = Habit(
+      id: '',
+      title: habitNameController.text,
+      description: descriptionController.text,
+      startDate: startDate,
+      endDate: endDate,
+      streak: 0,
+      isComplete: false,
+      totalCompletions: 0,
+      reminderTime: reminderTimeController,
+      days: daysController,
+      selectedWeekdays: selectedWeekdays,
+      userid: userId,
+    );
+
+    int totalDays = endDate.difference(startDate).inDays + 1;
+
+    var userDatesCollection = FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
+        .collection('AllDates');
+
+    for (int i = 0; i < totalDays; i++) {
+      DateTime currentDate = startDate.add(Duration(days: i));
+      String formattedDate =
+          "${currentDate.year}-${currentDate.month.toString().padLeft(2, '0')}-${currentDate.day.toString().padLeft(2, '0')}";
+
+      var dateDoc = userDatesCollection.doc(formattedDate);
+      var docSnapshot = await dateDoc.get();
+
+      if (docSnapshot.exists) {
+        var currentDateData =
+            CurrentDate.fromMap(docSnapshot.data() as Map<String, dynamic>);
+        currentDateData.habitsOfTheDay ??= [];
+        currentDateData.habitsOfTheDay.add(SubHabit.fromHabit(habit));
+        currentDateData.calculateScore();
+        await dateDoc.update(currentDateData.toMap());
+      } else {
+        var newCurrentDate = CurrentDate(
+          habitsOfTheDay: [SubHabit.fromHabit(habit)],
+          date: formattedDate,
+          userid: userId,
+        );
+        newCurrentDate.calculateScore();
+        await dateDoc.set(newCurrentDate.toMap());
+      }
+    }
+  }
+
+
+
+
 }

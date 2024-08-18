@@ -5,6 +5,7 @@ import 'package:habit_tracker/features/notification/notification.service.dart';
 
 import 'package:habit_tracker/features/routes/routes.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:habit_tracker/firebase_options.dart';
 import 'package:habit_tracker/ui/view/homeScreen.dart';
 import 'package:habit_tracker/ui/view/loginPage.dart';
 import 'package:habit_tracker/ui/view/signUpScreen.dart';
@@ -14,10 +15,12 @@ import 'package:timezone/data/latest.dart' as tz;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options:DefaultFirebaseOptions.currentPlatform,
+  );
   await NotificationService.init();
   tz.initializeTimeZones();
-  String? token = await FirebaseMessaging.instance.getToken();
   runApp(const Core());
 }
 
@@ -47,7 +50,7 @@ class HabitTracker extends StatelessWidget {
       routes: AppRoutes.routes,
       home: const Scaffold(
         body: Center(
-          child:SignupScreen()
+          child:HomeScreen()
 
         ),
       ),

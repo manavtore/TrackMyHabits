@@ -78,7 +78,19 @@ class _loginScreenState extends State<loginScreen> {
                    
                 }, child: const Text('Login')
               ),    
-              
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: ElevatedButton(
+                    onPressed: (){
+                    Navigator.pushNamedAndRemoveUntil(
+                          context,
+                          '/login',
+                          (Route<dynamic> route) => false,
+                        );
+                    }, 
+                    child: const Text('already have an account'),
+                    ),
+                ) 
                   ],
                ),
               ),
