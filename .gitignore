@@ -43,3 +43,5 @@ app.*.map.json
 /android/app/release
 
 /Backend/node_modules/
+Backend/habittracker-e6465-firebase-adminsdk-93kzb-035b099f96.json
+backend/src/habittracker-e6465-firebase-adminsdk-93kzb-035b099f96.json

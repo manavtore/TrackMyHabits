@@ -3,8 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:habit_tracker/core/Models/subHabit.dart';
 
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:habit_tracker/core/Models/subHabit.dart';
 
 class CurrentDate {
   List<SubHabit> habitsOfTheDay;
