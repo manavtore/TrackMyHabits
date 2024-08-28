@@ -39,7 +39,12 @@ class _LoginpageState extends State<Loginpage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Image(
-                      image: AssetImage(con.metamask,)),
+                      height: 250,
+                      width: 250,
+                      image: AssetImage(
+                        con.metamask,
+                        
+                        )),
                     W3MConnectWalletButton(service: loginNotifier.w3mService),
                     W3MNetworkSelectButton(service: loginNotifier.w3mService),
                     W3MAccountButton(service: loginNotifier.w3mService),
