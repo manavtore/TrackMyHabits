@@ -3,12 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:habit_tracker/core/app/provider.dart';
 import 'package:habit_tracker/features/notification/notification.service.dart';
 
-import 'package:habit_tracker/features/routes/routes.dart';
 import 'package:firebase_core/firebase_core.dart';
+
+import 'package:habit_tracker/features/routes/routes.dart';
 import 'package:habit_tracker/firebase_options.dart';
-import 'package:habit_tracker/ui/view/homeScreen.dart';
 import 'package:habit_tracker/ui/view/loginPage.dart';
-import 'package:habit_tracker/ui/view/signUpScreen.dart';
 import 'package:provider/provider.dart';
 import 'package:timezone/data/latest.dart' as tz;
 
@@ -46,14 +45,9 @@ class HabitTracker extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      initialRoute: AppRoutes.signupRoute,
+      initialRoute: AppRoutes.loginMeta,
       routes: AppRoutes.routes,
-      home: const Scaffold(
-        body: Center(
-          child:HomeScreen()
-
-        ),
-      ),
+     
     );
   }
 }

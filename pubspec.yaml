@@ -53,7 +53,7 @@ dependencies:
   firebase_messaging: ^15.0.4
   flutter_launcher_icons: ^0.13.1
   web3dart: ^2.7.3
-  web3modal_flutter: ^3.3.1
+  web3modal_flutter: ^3.3.3
   flutter_web3: ^2.1.9
   dash_chat_2: ^0.0.21
   chat_gpt_sdk: ^3.0.7
@@ -83,8 +83,7 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/aizen.png
-    - assets/MetaMask.png
-
+    - assets/images/metamask.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
